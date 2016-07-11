@@ -37,50 +37,44 @@ function init(font) {
 	var geometry = new THREE.SphereBufferGeometry(sphereRadius, 32, 16);
 	raycaster = new THREE.Raycaster();
 	mouse = new THREE.Vector2();
-	for (var alpha = 0; alpha <= 1.0; alpha += stepSize) {
-		var baseColor = new THREE.Color().setHSL(alpha, 0.5, 0.5);
-		if (alpha >= 0.5) {
-			reflectionCube = null;
-		}
-		for (var beta = 0; beta <= 1.0; beta += stepSize) {
-			var reflectivity = beta;
-			for (var gamma = 0; gamma <= 1.0; gamma += stepSize) {
-				var diffuseColor = baseColor.clone().multiplyScalar(gamma);
-				var material = new THREE.MeshBasicMaterial({
-					map: imgTexture,
-					color: diffuseColor,
-					reflectivity: reflectivity,
-					shading: THREE.SmoothShading,
-					envMap: reflectionCube
-				});
-				var mesh = new THREE.Mesh(geometry, material);
-				
-				//init state 0
-				mesh.state = 0;
-				
-				mesh.position.x = alpha * 400 - 200;
-				mesh.position.y = beta * 400 - 200;
-				mesh.position.z = gamma * 400 - 200;
+
+	var material_begin = new THREE.MeshBasicMaterial({
+		color: 0x23EA14,
+		reflectivity: 0.5,
+	});
+	var material_safe = new THREE.MeshBasicMaterial({
+		color: 0x7F7F7F
+	});
+	var material_dangerous = new THREE.MeshBasicMaterial({
+		color: 0xEB1318
+	});
+	for(var x = 0; x < numberOfSphersPerSide; x++){
+		for (var y = 0; y < numberOfSphersPerSide; y++) {
+			for(var z = 0; z < numberOfSphersPerSide; z++){
+				var mesh = new THREE.Mesh(geometry, material_begin);
+				mesh.position.x = x * 150 - 200;
+				mesh.position.y = y * 150 - 200;
+				mesh.position.z = z * 150 - 200;
 				objects.push(mesh);
 				scene.add(mesh);
 			}
 		}
 	}
 
-	function addLabel(name, location) {
-		var textGeo = new THREE.TextGeometry(name, {
-			font: font,
-			size: 20,
-			height: 1,
-			curveSegments: 1
-		});
-		var textMaterial = new THREE.MeshBasicMaterial({
-			color: 0xffffff
-		});
-		var textMesh = new THREE.Mesh(textGeo, textMaterial);
-		textMesh.position.copy(location);
-		scene.add(textMesh);
-	}
+	// function addLabel(name, location) {
+	// 	var textGeo = new THREE.TextGeometry(name, {
+	// 		font: font,
+	// 		size: 20,
+	// 		height: 1,
+	// 		curveSegments: 1
+	// 	});
+	// 	var textMaterial = new THREE.MeshBasicMaterial({
+	// 		color: 0xffffff
+	// 	});
+	// 	var textMesh = new THREE.Mesh(textGeo, textMaterial);
+	// 	textMesh.position.copy(location);
+	// 	scene.add(textMesh);
+	// }
 	//
 	renderer = new THREE.WebGLRenderer({
 		antialias: true
