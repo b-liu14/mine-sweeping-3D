@@ -80,6 +80,10 @@ function init(font) {
 		}
 	}
 
+	//
+	var numberOfBomb = 20;
+	gameInit(numberOfBomb);
+
 	// function addLabel(name, location) {
 	// 	var textGeo = new THREE.TextGeometry(name, {
 	// 		font: font,
@@ -116,7 +120,14 @@ function init(font) {
 	document.addEventListener( 'keyup', onDocumentKeyUp, false );
 	window.addEventListener('resize', onWindowResize, false);
 }
-
+// To decide which object is bomb.
+function gameInit(numberOfBomb){
+	var bombReserve = numberOfBomb;
+	for(var i = 0, l = objects.length; i < l; i ++){
+		var p = bombReserve / (l - i);
+		objects[i].isBomb = (Math.random() <= p);
+	}
+}
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
