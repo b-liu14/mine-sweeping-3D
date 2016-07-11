@@ -38,20 +38,13 @@ function init(font) {
 	raycaster = new THREE.Raycaster();
 	mouse = new THREE.Vector2();
 
-	var material_begin = new THREE.MeshBasicMaterial({
-		color: 0x23EA14,
-		reflectivity: 0.5,
-	});
-	var material_safe = new THREE.MeshBasicMaterial({
-		color: 0x7F7F7F
-	});
-	var material_dangerous = new THREE.MeshBasicMaterial({
-		color: 0xEB1318
-	});
+	var material_begin= { color: 0x23EA14, reflectivity: 0.5 };
+	var material_safe= { color: 0x7F7F7F };
+	var material_dangerous= { color: 0xEB1318 };
 	for(var x = 0; x < numberOfSphersPerSide; x++){
 		for (var y = 0; y < numberOfSphersPerSide; y++) {
 			for(var z = 0; z < numberOfSphersPerSide; z++){
-				var mesh = new THREE.Mesh(geometry, material_begin);
+				var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( material_begin ) );
 				mesh.position.x = x * 150 - 200;
 				mesh.position.y = y * 150 - 200;
 				mesh.position.z = z * 150 - 200;
@@ -134,13 +127,13 @@ function onDocumentMouseDown( event ) {
 }
 function onDocumentKeyDown( event ) {
 	switch( event.keyCode ) {
-		case 16: isShiftDown = true; 
+		case 16: isShiftDown = true;
 		break;
 	}
 }
 function onDocumentKeyUp( event ) {
 	switch ( event.keyCode ) {
-		case 16: isShiftDown = false; 
+		case 16: isShiftDown = false;
 		break;
 	}
 }
