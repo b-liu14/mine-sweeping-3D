@@ -1,4 +1,5 @@
-if (!Detector.webgl) Detector.addGetWebGLMessage();
+if (!Detector.webgl) 
+	Detector.addGetWebGLMessage();
 var container, stats;
 var camera, scene, renderer, controls, objects = [];
 var particleLight;
@@ -55,6 +56,8 @@ function init(font) {
 				mesh.position.x = x * 150 - 200;
 				mesh.position.y = y * 150 - 200;
 				mesh.position.z = z * 150 - 200;
+				//init the state of balls
+				mesh.state = 0;
 				objects.push(mesh);
 				scene.add(mesh);
 			}
