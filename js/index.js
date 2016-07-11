@@ -1,6 +1,7 @@
 var color_default = 0x23EA14;
 var color_safe = 0x1A25E4;
 var color_dangerous = 0xEB1318;
+var color_bomb = 0x000000;
 
 
 if (!Detector.webgl)
@@ -10,6 +11,18 @@ var camera, scene, renderer, controls, objects = [];
 var particleLight;
 var mouse,intersect,raycaster,isShiftDown = false;
 var loader = new THREE.FontLoader();
+var position_objects = new Array(6);
+
+//init 3D objects Array
+for (var i = 0; i < position_objects.length; i++) {
+	position_objects[i] = new Array(6);
+}
+for (var i = 0; i < position_objects.length; i++) {
+	for (var j = 0; j < position_objects[i].length; j++) {
+		position_objects[i][j] = new Array(6);
+	}
+}
+
 loader.load('fonts/gentilis_regular.typeface.json', function(font) {
 	init(font);
 	animate();
@@ -52,9 +65,16 @@ function init(font) {
 				mesh.position.x = x * 150 - 200;
 				mesh.position.y = y * 150 - 200;
 				mesh.position.z = z * 150 - 200;
+
 				//init the state of balls
 				mesh.state = 0;
+				mesh.bombNum = 0;
+				mesh.position_x = x;
+				mesh.position_y = y;
+				mesh.position_z = z;
+
 				objects.push(mesh);
+				position_objects[x][y][z] = mesh;
 				scene.add(mesh);
 			}
 		}
@@ -115,20 +135,31 @@ function onDocumentMouseDown( event ) {
 	var intersects = raycaster.intersectObjects( objects );
 	if ( intersects.length > 0 ) {
 		intersect = intersects[ 0 ].object;
-		// delete cube
 		if ( !isShiftDown ) {
-			if ( intersect.state === 0 ) {
-				intersect.state = 1;
+			if ( intersect.state === 0 && !intersect.isBomb) {
+				//safe
+				intersect.state = 1;         
+				intersect.bombNum = getBombNum(intersect);
+
+				//To Add The num
+				//....
 			}
-		// create cube
-		} else {
+			else if (intersect.state === 0 && intersect.isBomb) {
+				//bomb !!
+				intersect.state = 3;
+			}
+		} 
+		else {
 			if (intersect.state === 0) {
-				intersect.state = 2;
+				//lift flag
+				intersect.state = 2;        
 			}
 			else {
-				intersect.state = 0;
+				//init state
+				intersect.state = 0;       
 			}
 		}
+
 	}
 }
 function onDocumentKeyDown( event ) {
@@ -142,6 +173,25 @@ function onDocumentKeyUp( event ) {
 		case 16: isShiftDown = false;
 		break;
 	}
+}
+function getBombNum (mesh) {
+	var bombNum = 0;
+	var x_min = mesh.position_x - 1 >= 0 ? mesh.position_x - 1 : 0;
+	var y_min = mesh.position_y - 1 >= 0 ? mesh.position_y - 1 : 0;
+	var z_min = mesh.position_z - 1 >= 0 ? mesh.position_z - 1 : 0;
+	var x_max = mesh.position_x + 1 >= 0 ? mesh.position_x + 1 : 6;
+	var y_max = mesh.position_y + 1 >= 0 ? mesh.position_y + 1 : 6;
+	var z_max = mesh.position_z + 1 >= 0 ? mesh.position_z + 1 : 6;
+	for (var i = x_min;i < x_max;i++ ) {
+		for (var j = y_min;j < y_max;j++) {
+			for (var k = z_min;k < z_max;k++) {
+				if (position_objects[i][j][k].isBomb) {
+					bombNum++;
+				}	
+			}
+		}
+	}
+	return bombNum;
 }
 function render() {
 	var timer = Date.now() * 0.00025;
@@ -159,6 +209,9 @@ function render() {
 				break;
 			case 2:
 				intersect.material.color = new THREE.Color(color_dangerous);
+				break;
+			case 3:
+				intersect.material.color = new THREE.Color(color_bomb);
 				break;
 			default:
 				// statements_def
