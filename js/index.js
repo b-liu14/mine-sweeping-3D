@@ -1,4 +1,9 @@
-if (!Detector.webgl) 
+var color_default = 0x23EA14;
+var color_safe = 0x1A25E4;
+var color_dangerous = 0xEB1318;
+
+
+if (!Detector.webgl)
 	Detector.addGetWebGLMessage();
 var container, stats;
 var camera, scene, renderer, controls, objects = [];
@@ -39,13 +44,11 @@ function init(font) {
 	raycaster = new THREE.Raycaster();
 	mouse = new THREE.Vector2();
 
-	var material_begin= { color: 0x23EA14, reflectivity: 0.5 };
-	var material_safe= { color: 0x7F7F7F };
-	var material_dangerous= { color: 0xEB1318 };
 	for(var x = 0; x < numberOfSphersPerSide; x++){
 		for (var y = 0; y < numberOfSphersPerSide; y++) {
 			for(var z = 0; z < numberOfSphersPerSide; z++){
-				var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( material_begin ) );
+				var material = new THREE.MeshBasicMaterial( {color:color_default} );
+				var mesh = new THREE.Mesh( geometry,  material);
 				mesh.position.x = x * 150 - 200;
 				mesh.position.y = y * 150 - 200;
 				mesh.position.z = z * 150 - 200;
@@ -149,13 +152,13 @@ function render() {
 		intersect = intersects[0].object;
 		switch (intersect.state) {
 			case 0:
-				intersect.material.color = new THREE.Color(0x23EA14);
+				intersect.material.color = new THREE.Color(color_default);
 				break;
 			case 1:
-				intersect.material.color = new THREE.Color(0x000000);
+				intersect.material.color = new THREE.Color(color_safe);
 				break;
 			case 2:
-				intersect.material.color = new THREE.Color(0xEB1318);
+				intersect.material.color = new THREE.Color(color_dangerous);
 				break;
 			default:
 				// statements_def
