@@ -1,6 +1,12 @@
 var color_default = 0x23EA14;
 var color_safe = 0x1A25E4;
 var color_dangerous = 0xEB1318;
+// text
+var textSize = 70;
+var textHeight = textSize;
+var textFontUrl = 'fonts/optimer_bold.typeface.json';
+var textHover = 30;
+var mirror = false;
 
 
 if (!Detector.webgl)
@@ -63,6 +69,9 @@ function init(font) {
 	//
 	var numberOfBomb = 20;
 	gameInit(numberOfBomb);
+	createText("test text", new THREE.Vector3( 1, 0, 0 ))
+	loadFont("test text", new THREE.Vector3(1, 0, 0));
+
 
 	// function addLabel(name, location) {
 	// 	var textGeo = new THREE.TextGeometry(name, {
@@ -78,7 +87,8 @@ function init(font) {
 	// 	textMesh.position.copy(location);
 	// 	scene.add(textMesh);
 	// }
-	//
+
+	// RENDER
 	renderer = new THREE.WebGLRenderer({
 		antialias: true
 	});
@@ -95,10 +105,21 @@ function init(font) {
 	controls = new THREE.OrbitControls(camera);
 	controls.target.set(0, 0, 0);
 	controls.update();
+	// EVENT LISTENER
 	document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 	document.addEventListener( 'keydown', onDocumentKeyDown, false );
 	document.addEventListener( 'keyup', onDocumentKeyUp, false );
 	window.addEventListener('resize', onWindowResize, false);
+
+	// LIGHT
+	var dirLight = new THREE.DirectionalLight( 0xffffff, 0.125 );
+	dirLight.position.set( 0, 0, 1 ).normalize();
+	scene.add( dirLight );
+
+	var pointLight = new THREE.PointLight( 0xffffff, 1.5 );
+	pointLight.color.setHex(color_safe);
+	pointLight.position.set( 0, 100, 90 );
+	scene.add( pointLight );
 }
 // To decide which object is bomb.
 function gameInit(numberOfBomb){
@@ -119,6 +140,68 @@ function animate() {
 	render();
 	stats.update();
 }
+
+function loadFont(text, position){
+	var loader = new THREE.FontLoader();
+	var font = null;
+	loader.load( textFontUrl, function ( response ) {
+		debugger;
+		font = response;
+		createText(text, font, position);
+	} );
+	return font;
+}
+function createText(text, font, position) {
+	var material = new THREE.MultiMaterial( [
+		new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THREE.FlatShading } ), // front
+		new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THREE.SmoothShading } ) // side
+	] );
+
+	var group = new THREE.Group();
+	group.position = position;
+
+	scene.add( group );
+
+	var textGeo = new THREE.TextGeometry( text, {
+		font: font,
+		size: textSize,
+		height: textHeight,
+		material: 2,
+		extrudeMaterial: 1
+	});
+
+	textGeo.computeBoundingBox();
+	textGeo.computeVertexNormals();
+
+	var centerOffset = -0.5 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
+
+	var textMesh1 = new THREE.Mesh( textGeo, material );
+
+	textMesh1.position.x = centerOffset;
+	textMesh1.position.y = textHover;
+	textMesh1.position.z = 0;
+
+	textMesh1.rotation.x = 0;
+	textMesh1.rotation.y = Math.PI * 2;
+
+	group.add( textMesh1 );
+
+	if ( mirror ) {
+
+		var textMesh2 = new THREE.Mesh( textGeo, material );
+
+		textMesh2.position.x = centerOffset;
+		textMesh2.position.y = -textHover;
+		textMesh2.position.z = textHeight;
+
+		textMesh2.rotation.x = Math.PI;
+		textMesh2.rotation.y = Math.PI * 2;
+
+		group.add( textMesh2 );
+
+	}
+}
+
 function onDocumentMouseDown( event ) {
 	event.preventDefault();
 	mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
