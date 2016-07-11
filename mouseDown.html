@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl-camera cinematic</title>
+		<title>three.js webgl - interactive - voxel painter</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -11,26 +11,26 @@
 				margin: 0px;
 				overflow: hidden;
 			}
+			#oldie { background-color: #ddd !important }
 		</style>
 	</head>
 	<body>
 
 		<script src="../build/three.js"></script>
 
-		<script src="js/shaders/BokehShader2.js"></script>
-
-		<script src="js/cameras/CinematicCamera.js"></script>
-
-		<script src="js/libs/stats.min.js"></script>
-		<script src='js/libs/dat.gui.min.js'></script>
+		<script src="js/Detector.js"></script>
 
 		<script>
-			var container, stats;
-			var camera, scene, raycaster, renderer;
-			var mouse = new THREE.Vector2(), INTERSECTED;
-			var radius = 100, theta = 0;
+			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+			var container;
+			var camera, scene, renderer;
+			var plane, cube;
+			var mouse, raycaster, isShiftDown = false;
+			var rollOverMesh, rollOverMaterial;
+			var cubeGeo, cubeMaterial;
+			var objects = [];
 			init();
-			animate();
+			render();
 			function init() {
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
@@ -39,128 +39,111 @@
 				info.style.top = '10px';
 				info.style.width = '100%';
 				info.style.textAlign = 'center';
-				info.innerHTML = '<a href="http://threejs.org" target="_blank">three.js</a> webgl - interactive cubes';
+				info.innerHTML = '<a href="http://threejs.org" target="_blank">three.js</a> - voxel painter - webgl<br><strong>click</strong>: add voxel, <strong>shift + click</strong>: remove voxel';
 				container.appendChild( info );
-				camera = new THREE.CinematicCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
-				camera.setLens(5);
-        		camera.position.set(2, 1, 500);
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.set( 500, 800, 1300 );
+				camera.lookAt( new THREE.Vector3() );
 				scene = new THREE.Scene();
-				scene.add( new THREE.AmbientLight( 0xffffff, 0.3 ) );
-				var light = new THREE.DirectionalLight( 0xffffff, 0.35 );
-				light.position.set( 1, 1, 1 ).normalize();
-				scene.add( light );
-				var geometry = new THREE.BoxGeometry( 20, 20, 20 );
-				for ( var i = 0; i < 1500; i ++ ) {
-					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
-					object.position.x = Math.random() * 800 - 400;
-					object.position.y = Math.random() * 800 - 400;
-					object.position.z = Math.random() * 800 - 400;
-					scene.add( object );
+				// roll-over helpers
+				rollOverGeo = new THREE.BoxGeometry( 50, 50, 50 );
+				rollOverMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.5, transparent: true } );
+				rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial );
+				scene.add( rollOverMesh );
+				// cubes
+				cubeGeo = new THREE.BoxGeometry( 50, 50, 50 );
+				cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xfeb74c, map: new THREE.TextureLoader().load( "textures/square-outline-textured.png" ) } );
+				// grid
+				var size = 500, step = 50;
+				var geometry = new THREE.Geometry();
+				for ( var i = - size; i <= size; i += step ) {
+					geometry.vertices.push( new THREE.Vector3( - size, 0, i ) );
+					geometry.vertices.push( new THREE.Vector3(   size, 0, i ) );
+					geometry.vertices.push( new THREE.Vector3( i, 0, - size ) );
+					geometry.vertices.push( new THREE.Vector3( i, 0,   size ) );
 				}
+				var material = new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2, transparent: true } );
+				var line = new THREE.LineSegments( geometry, material );
+				scene.add( line );
+				//
 				raycaster = new THREE.Raycaster();
-				renderer = new THREE.WebGLRenderer({antialias:true});
+				mouse = new THREE.Vector2();
+				geometry = new THREE.PlaneBufferGeometry( 1000, 1000 );
+				geometry.rotateX( - Math.PI / 2 );
+				plane = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { visible: false } ) );
+				scene.add( plane );
+				objects.push( plane );
+				// Lights
+				var ambientLight = new THREE.AmbientLight( 0x606060 );
+				scene.add( ambientLight );
+				var directionalLight = new THREE.DirectionalLight( 0xffffff );
+				directionalLight.position.set( 1, 0.75, 0.5 ).normalize();
+				scene.add( directionalLight );
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setClearColor( 0xf0f0f0 );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer.sortObjects = false;
-				container.appendChild(renderer.domElement);
-				stats = new Stats();
-				container.appendChild( stats.dom );
+				container.appendChild( renderer.domElement );
 				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-		
-				window.addEventListener( 'resize', onWindowResize, false );
-				var effectController  = {
-					focalLength: 15,
-					// jsDepthCalculation: true,
-					// shaderFocus: false,
-					//
-					fstop: 2.8,
-					// maxblur: 1.0,
-					//
-					showFocus: false,
-					focalDepth: 3,
-					// manualdof: false,
-					// vignetting: false,
-					// depthblur: false,
-					//
-					// threshold: 0.5,
-					// gain: 2.0,
-					// bias: 0.5,
-					// fringe: 0.7,
-					//
-					// focalLength: 35,
-					// noise: true,
-					// pentagon: false,
-					//
-					// dithering: 0.0001
-				};
-				var matChanger = function( ) {
-					for (var e in effectController) {
-						if (e in camera.postprocessing.bokeh_uniforms)
-						camera.postprocessing.bokeh_uniforms[ e ].value = effectController[ e ];
-					}
-					camera.postprocessing.bokeh_uniforms[ 'znear' ].value = camera.near;
-					camera.postprocessing.bokeh_uniforms[ 'zfar' ].value = camera.far;
-					camera.setLens(effectController.focalLength, camera.frameHeight ,effectController.fstop, camera.coc);
-					effectController['focalDepth'] = camera.postprocessing.bokeh_uniforms["focalDepth"].value;
-				};
-				var gui = new dat.GUI();
-				gui.add( effectController, "focalLength", 1, 135, 0.01 ).onChange( matChanger );
-				gui.add( effectController, "fstop", 1.8, 22, 0.01 ).onChange( matChanger );
-				gui.add( effectController, "focalDepth", 0.1, 100, 0.001 ).onChange( matChanger );
-				gui.add( effectController, "showFocus", true ).onChange( matChanger );
-				matChanger();
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				document.addEventListener( 'keydown', onDocumentKeyDown, false );
+				document.addEventListener( 'keyup', onDocumentKeyUp, false );
+				//
 				window.addEventListener( 'resize', onWindowResize, false );
 			}
-		function onWindowResize() {
+			function onWindowResize() {
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
 				renderer.setSize( window.innerWidth, window.innerHeight );
 			}
 			function onDocumentMouseMove( event ) {
 				event.preventDefault();
-				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-			}
-			function animate() {
-				requestAnimationFrame( animate, renderer.domElement );
+				mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
+				raycaster.setFromCamera( mouse, camera );
+				var intersects = raycaster.intersectObjects( objects );
+				if ( intersects.length > 0 ) {
+					var intersect = intersects[ 0 ];
+					rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
+					rollOverMesh.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+				}
 				render();
-				stats.update();
+			}
+			function onDocumentMouseDown( event ) {
+				event.preventDefault();
+				mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
+				raycaster.setFromCamera( mouse, camera );
+				var intersects = raycaster.intersectObjects( objects );
+				if ( intersects.length > 0 ) {
+					var intersect = intersects[ 0 ];
+					// delete cube
+					if ( isShiftDown ) {
+						if ( intersect.object != plane ) {
+							scene.remove( intersect.object );
+							objects.splice( objects.indexOf( intersect.object ), 1 );
+						}
+					// create cube
+					} else {
+						var voxel = new THREE.Mesh( cubeGeo, cubeMaterial );
+						voxel.position.copy( intersect.point ).add( intersect.face.normal );
+						voxel.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+						scene.add( voxel );
+						objects.push( voxel );
+					}
+					render();
+				}
+			}
+			function onDocumentKeyDown( event ) {
+				switch( event.keyCode ) {
+					case 16: isShiftDown = true; break;
+				}
+			}
+			function onDocumentKeyUp( event ) {
+				switch ( event.keyCode ) {
+					case 16: isShiftDown = false; break;
+				}
 			}
 			function render() {
-				theta += 0.1;
-				camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
-				camera.lookAt( scene.position );
-				camera.updateMatrixWorld();
-				// find intersections
-				raycaster.setFromCamera( mouse, camera );
-				var intersects = raycaster.intersectObjects( scene.children );
-				if ( intersects.length > 0 ) {
-					var targetDistance = intersects[ 0 ].distance;
-					
-					//Using Cinematic camera focusAt method
-					camera.focusAt(targetDistance);
-					if ( INTERSECTED != intersects[ 0 ].object ) {
-						if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
-						INTERSECTED = intersects[ 0 ].object;
-						INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-						INTERSECTED.material.emissive.setHex( 0xff0000 );
-					}
-				} else {
-					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
-					INTERSECTED = null;
-				}
-				if(camera.postprocessing.enabled){
-					//rendering Cinematic Camera effects
-					camera.renderCinematic(scene, renderer);
-				}
-				 else {
-					scene.overrideMaterial = null;
-					renderer.clear();
-					renderer.render( scene, camera );
-				}
+				renderer.render( scene, camera );
 			}
 		</script>
 

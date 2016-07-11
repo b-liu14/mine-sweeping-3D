@@ -2,6 +2,7 @@ if (!Detector.webgl) Detector.addGetWebGLMessage();
 var container, stats;
 var camera, scene, renderer, controls, objects = [];
 var particleLight;
+var mouse,intersect,raycaster,isShiftDown = false;
 var loader = new THREE.FontLoader();
 loader.load('fonts/gentilis_regular.typeface.json', function(font) {
 	init(font);
@@ -34,6 +35,8 @@ function init(font) {
 	var sphereRadius = (cubeWidth / numberOfSphersPerSide) * 0.8 * 0.5;
 	var stepSize = 1.0 / numberOfSphersPerSide;
 	var geometry = new THREE.SphereBufferGeometry(sphereRadius, 32, 16);
+	raycaster = new THREE.Raycaster();
+	mouse = new THREE.Vector2();
 	for (var alpha = 0; alpha <= 1.0; alpha += stepSize) {
 		var baseColor = new THREE.Color().setHSL(alpha, 0.5, 0.5);
 		if (alpha >= 0.5) {
@@ -49,8 +52,12 @@ function init(font) {
 					reflectivity: reflectivity,
 					shading: THREE.SmoothShading,
 					envMap: reflectionCube
-				})
+				});
 				var mesh = new THREE.Mesh(geometry, material);
+				
+				//init state 0
+				mesh.state = 0;
+				
 				mesh.position.x = alpha * 400 - 200;
 				mesh.position.y = beta * 400 - 200;
 				mesh.position.z = gamma * 400 - 200;
@@ -91,6 +98,9 @@ function init(font) {
 	controls = new THREE.OrbitControls(camera);
 	controls.target.set(0, 0, 0);
 	controls.update();
+	document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+	document.addEventListener( 'keydown', onDocumentKeyDown, false );
+	document.addEventListener( 'keyup', onDocumentKeyUp, false );
 	window.addEventListener('resize', onWindowResize, false);
 }
 
@@ -105,10 +115,63 @@ function animate() {
 	render();
 	stats.update();
 }
-
+function onDocumentMouseDown( event ) {
+	event.preventDefault();
+	mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
+	raycaster.setFromCamera( mouse, camera );
+	var intersects = raycaster.intersectObjects( objects );
+	if ( intersects.length > 0 ) {
+		intersect = intersects[ 0 ].object;
+		// delete cube
+		if ( !isShiftDown ) {
+			if ( intersect.state === 0 ) {
+				intersect.state = 1;
+			}
+		// create cube
+		} else {
+			if (intersect.state === 0) {
+				intersect.state = 2;
+			}
+			else {
+				intersect.state = 0;
+			}
+		}
+	}
+}
+function onDocumentKeyDown( event ) {
+	switch( event.keyCode ) {
+		case 16: isShiftDown = true; 
+		break;
+	}
+}
+function onDocumentKeyUp( event ) {
+	switch ( event.keyCode ) {
+		case 16: isShiftDown = false; 
+		break;
+	}
+}
 function render() {
 	var timer = Date.now() * 0.00025;
 	camera.lookAt(scene.position);
+	raycaster.setFromCamera( mouse, camera );
+	var intersects = raycaster.intersectObjects( objects );
+	if (intersects.length > 0) {
+		intersect = intersects[0].object;
+		switch (intersect.state) {
+			case 0:
+				intersect.material.color = new THREE.Color(0x23EA14);
+				break;
+			case 1:
+				intersect.material.color = new THREE.Color(0x000000);
+				break;
+			case 2:
+				intersect.material.color = new THREE.Color(0xEB1318);
+				break;
+			default:
+				// statements_def
+				break;
+		}
+	}
 	for (var i = 0, l = objects.length; i < l; i++) {
 		var object = objects[i];
 		object.rotation.y += 0.005;
