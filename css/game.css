@@ -1,5 +1,5 @@
 body {
-	color: #fff;
+	color: #f00;
 	font-family:Monospace;
 	font-size:25px;
 	text-align:center;
@@ -9,11 +9,14 @@ body {
 }
 .info {
 	position: absolute;
-
 	top: 0px;
 	left: 400px;
 	padding: 5px;
 	width: 200px;
+}
+span {
+	height: 50px;
+	margin: auto;
 }
 #bomb {
 	height: 50px;
