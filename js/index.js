@@ -30,6 +30,8 @@ var loader = new THREE.FontLoader();
 
 //
 var numberOfSphersPerSide = 5;
+var MAX = coodinate_value(numberOfSphersPerSide - 1);
+var MIN = coodinate_value(0);
 
 //init 3D objects Array
 var position_objects = new Array(numberOfSphersPerSide);
@@ -58,8 +60,9 @@ function init(font) {
 
 	// Background
 	var reflectionCube = new THREE.CubeTextureLoader()
-		.setPath('textures/cube/MilkyWay/')
-		.load(['dark-s_px.jpg', 'dark-s_nx.jpg', 'dark-s_py.jpg', 'dark-s_ny.jpg', 'dark-s_pz.jpg', 'dark-s_nz.jpg']);
+		.setPath('textures/cube/skybox/')
+		// .load(['dark-s_px.jpg', 'dark-s_nx.jpg', 'dark-s_py.jpg', 'dark-s_ny.jpg', 'dark-s_pz.jpg', 'dark-s_nz.jpg']);
+		.load(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']);
 	reflectionCube.format = THREE.RGBFormat;
 	scene = new THREE.Scene();
 	scene.background = reflectionCube;
@@ -76,7 +79,7 @@ function init(font) {
 			for (var z = 0; z < numberOfSphersPerSide; z++) {
 				var material = new THREE.MeshPhongMaterial( {
 					color: color_default,
-					specular: 0x00FF64,
+					specular: 0xF5F309,
 					shininess: 30,
 					shading: THREE.SmoothShading
 				} )
@@ -127,16 +130,28 @@ function init(font) {
 
 	// LIGHT
 	var dirLight = new THREE.DirectionalLight(0xffffff, 0.125);
-	dirLight.position.set(0, 0, 1).normalize();
+	dirLight.position.set(0, 0, 400).normalize();
 	scene.add(dirLight);
 
 	dirLight = new THREE.DirectionalLight(0xffffff, 0.125);
-	dirLight.position.set(0, 1, 0).normalize();
+	dirLight.position.set(0, 400, 0).normalize();
 	scene.add(dirLight);
 
 	dirLight = new THREE.DirectionalLight(0xffffff, 0.125);
-	dirLight.position.set(1, 0, 0).normalize();
+	dirLight.position.set( 400, 0, 0).normalize();
 	scene.add(dirLight);
+
+	pointLight = new THREE.PointLight( 0xfff, 0.5);
+	pointLight.position.set(MIN * 2, MIN * 2, 2 * MAX);
+	scene.add(pointLight);
+
+	pointLight = new THREE.PointLight( 0xfff, 0.5);
+	pointLight.position.set(MIN * 2, 2 * MAX, MIN * 2);
+	scene.add(pointLight);
+
+	pointLight = new THREE.PointLight( 0xfff, 0.5);
+	pointLight.position.set(2 * MAX, MIN * 2, MIN * 2);
+	scene.add(pointLight);
 }
 // To decide which object is bomb.
 function gameInit(numberOfBomb) {
@@ -158,15 +173,15 @@ function gameInit(numberOfBomb) {
 	addBorder();
 }
 
+function coodinate_value (index){
+	return sphereOffset + sphereInterval * (index);
+}
+
 function addBorder(){
 	var material = new THREE.LineBasicMaterial({
 		color: 0xFFFFFF
 	});
-	var coodinate_value = function(index){
-		return sphereOffset + sphereInterval * (index);
-	}
-	var MAX = coodinate_value(numberOfSphersPerSide - 1);
-	var MIN = coodinate_value(0);
+	debugger;
 	for(var x = MIN; x <= MAX; x += sphereInterval){
 		for(var y = MIN; y <= MAX; y += sphereInterval){
 			var geometry_1 = new THREE.Geometry();
@@ -219,11 +234,11 @@ function loadFont() {
 function createText(text, position) {
 	var material = new THREE.MultiMaterial([
 		new THREE.MeshPhongMaterial({
-			color: 0xF8F206,
+			color: 0xf00,
 			shading: THREE.FlatShading
 		}), // front
 		new THREE.MeshPhongMaterial({
-			color: 0xFFE200,
+			color: 0xf00,
 			shading: THREE.SmoothShading
 		}) // side
 	]);
@@ -276,12 +291,14 @@ function onDocumentMouseDown(event) {
 				// safe
 				intersect.state = GAMESTATE_SAFE;
 				intersect.bombNum = getBombNum(intersect);
-				createText("" + intersect.bombNum, intersect.position);
-				scene.remove( intersect );
 				if (intersect.bombNum === 0) {
 					dominoEffect(intersect);
 				}
-			} 
+				else {
+					createText("" + intersect.bombNum, intersect.position);
+				}
+				scene.remove( intersect );
+			}
 			else if (intersect.state === GAMESTATE_DEFAULT && intersect.isBomb) {
 				// bomb
 				intersect.state = GAMESTATE_BOMB;
@@ -292,7 +309,7 @@ function onDocumentMouseDown(event) {
 				// lift flag
 				intersect.state = GAMESTATE_DANGEROUS;
 				intersect.material.color = new THREE.Color(color_dangerous);
-			} 
+			}
 			else if (intersect.state === GAMESTATE_DANGEROUS){
 				// init state
 				intersect.state = GAMESTATE_DEFAULT;
@@ -318,32 +335,38 @@ function  dominoEffect(mesh) {
 		// safe
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
-		createText("" + object.bombNum, object.position);
 		scene.remove( object );
 		if (object.bombNum === 0) {
 			dominoEffect(object);
 		}
-	} 
+		else {
+			createText("" + object.bombNum, object.position);
+		}
+	}
 	object = position_objects[x_max][mesh.position_y][mesh.position_z];
 	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
 		// safe
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
-		createText("" + object.bombNum, object.position);
 		scene.remove( object );
 		if (object.bombNum === 0) {
 			dominoEffect(object);
 		}
-	} 
+		else {
+			createText("" + object.bombNum, object.position);
+		}
+	}
 	object = position_objects[mesh.position_x][y_min][mesh.position_z];
 	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
 		// safe
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
-		createText("" + object.bombNum, object.position);
 		scene.remove( object );
 		if (object.bombNum === 0) {
 			dominoEffect(object);
+		}
+		else {
+			createText("" + object.bombNum, object.position);
 		}
 	}
 	object = position_objects[mesh.position_x][y_max][mesh.position_z];
@@ -351,10 +374,12 @@ function  dominoEffect(mesh) {
 		// safe
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
-		createText("" + object.bombNum, object.position);
 		scene.remove( object );
 		if (object.bombNum === 0) {
 			dominoEffect(object);
+		}
+		else {
+			createText("" + object.bombNum, object.position);
 		}
 	}
 	object = position_objects[mesh.position_x][mesh.position_y][z_min];
@@ -362,10 +387,12 @@ function  dominoEffect(mesh) {
 		// safe
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
-		createText("" + object.bombNum, object.position);
 		scene.remove( object );
 		if (object.bombNum === 0) {
 			dominoEffect(object);
+		}
+		else {
+			createText("" + object.bombNum, object.position);
 		}
 	}
 	object = position_objects[mesh.position_x][mesh.position_y][z_max];
@@ -373,10 +400,12 @@ function  dominoEffect(mesh) {
 		// safe
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
-		createText("" + object.bombNum, object.position);
 		scene.remove( object );
 		if (object.bombNum === 0) {
 			dominoEffect(object);
+		}
+		else {
+			createText("" + object.bombNum, object.position);
 		}
 	}
 }
