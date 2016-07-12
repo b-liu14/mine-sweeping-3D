@@ -10,7 +10,7 @@ var GAMESTATE_SAFE = 1;
 var GAMESTATE_DANGEROUS = 2;
 var GAMESTATE_BOMB = 3;
 
-//
+
 if (!Detector.webgl)
 	Detector.addGetWebGLMessage();
 var container, stats;
@@ -25,7 +25,7 @@ var difficulty2NumberOfShperes = {
 	"HARD": 5,
 	"NIGHTMARE": 6
 }
-debugger;
+
 var numberOfSphersPerSide = difficulty2NumberOfShperes[ localStorage[ "difficulty" ] ];
 if(typeof numberOfSphersPerSide !== "number"){
 	numberOfSphersPerSide = difficulty2NumberOfShperes["easy"];
@@ -39,6 +39,11 @@ var sphereOffset = -200;
 var numberOfSphers = numberOfSphersPerSide * numberOfSphersPerSide * numberOfSphersPerSide;
 var numberOfBomb = Math.ceil(Math.pow(numberOfSphersPerSide, 3) * 0.1);
 var numberOfClickedSphere = 0;
+
+//reservedbombNUm
+var reservedBombs = document.getElementById('numbersOfReservedBombs');
+var reservedBombNum = numberOfBomb;
+reservedBombs.innerHTML = reservedBombNum;
 
 // text
 var textSize = sphereRadius;
@@ -68,6 +73,15 @@ loader.load('fonts/gentilis_regular.typeface.json', function(_font) {
 	animate();
 });
 
+var timer = 0;
+
+//display timer
+function startTime()
+{
+	document.getElementById('Time').innerHTML = timer + 's';
+	timer ++;
+	var t = setTimeout('startTime()',1000);
+}
 function init(font) {
 	//
 	container = document.createElement('div');
@@ -352,11 +366,15 @@ function onDocumentMouseDown(event) {
 				// lift flag
 				intersect.state = GAMESTATE_DANGEROUS;
 				intersect.material.color = new THREE.Color(color_dangerous);
+				reservedBombNum--;
+				reservedBombs.innerHTML = reservedBombNum;
 			}
 			else if (intersect.state === GAMESTATE_DANGEROUS){
 				// init state
 				intersect.state = GAMESTATE_DEFAULT;
 				intersect.material.color = new THREE.Color(color_default);
+				reservedBombNum++;
+				reservedBombs.innerHTML = reservedBombNum;
 			}
 		}
 	}
