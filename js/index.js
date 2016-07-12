@@ -25,7 +25,7 @@ if (!Detector.webgl)
 	Detector.addGetWebGLMessage();
 var container, stats;
 var camera, scene, renderer, controls, objects = [], texts = [];
-var mouse, intersect, raycaster, isShiftDown = false;
+var mouse, intersect, raycaster;
 var loader = new THREE.FontLoader();
 
 //
@@ -53,8 +53,6 @@ function init(font) {
 	container = document.createElement('div');
 	document.body.appendChild(container);
 
-	// camera = new THREE.CubeCamera( 1, 100000, 128 );
-
 	camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 2000);
 	camera.position.set(0.0, 400, 400 * 3.5);
 
@@ -76,9 +74,6 @@ function init(font) {
 	for (var x = 0; x < numberOfSphersPerSide; x++) {
 		for (var y = 0; y < numberOfSphersPerSide; y++) {
 			for (var z = 0; z < numberOfSphersPerSide; z++) {
-				// var material = new THREE.MeshBasicMaterial({
-				// 	color: color_default
-				// });
 				var material = new THREE.MeshPhongMaterial( {
 					color: color_default,
 					specular: 0x00FF64,
@@ -89,9 +84,9 @@ function init(font) {
 				mesh.position.x = x * sphereInterval + sphereOffset;
 				mesh.position.y = y * sphereInterval + sphereOffset;
 				mesh.position.z = z * sphereInterval + sphereOffset;
+
 				//init the state of balls
 				mesh.state = GAMESTATE_DEFAULT;
-
 				mesh.bombNum = 0;
 				mesh.position_x = x;
 				mesh.position_y = y;
@@ -128,8 +123,6 @@ function init(font) {
 	controls.update();
 	// EVENT LISTENER
 	document.addEventListener('mousedown', onDocumentMouseDown, false);
-	document.addEventListener('keydown', onDocumentKeyDown, false);
-	document.addEventListener('keyup', onDocumentKeyUp, false);
 	window.addEventListener('resize', onWindowResize, false);
 
 	// LIGHT
@@ -144,11 +137,6 @@ function init(font) {
 	dirLight = new THREE.DirectionalLight(0xffffff, 0.125);
 	dirLight.position.set(1, 0, 0).normalize();
 	scene.add(dirLight);
-
-	pointLight = new THREE.PointLight(0xF6E908, 1.5);
-	pointLight.color.setHex(color_safe);
-	pointLight.position.set(0, 1, 0);
-	scene.add(pointLight);
 }
 // To decide which object is bomb.
 function gameInit(numberOfBomb) {
@@ -172,12 +160,12 @@ function gameInit(numberOfBomb) {
 
 function addBorder(){
 	var material = new THREE.LineBasicMaterial({
-		color: 0x000000
+		color: 0xFFFFFF
 	});
 	var coodinate_value = function(index){
-		return sphereOffset + sphereInterval * (index - 1/2);
+		return sphereOffset + sphereInterval * (index);
 	}
-	var MAX = coodinate_value(numberOfSphersPerSide);
+	var MAX = coodinate_value(numberOfSphersPerSide - 1);
 	var MIN = coodinate_value(0);
 	for(var x = MIN; x <= MAX; x += sphereInterval){
 		for(var y = MIN; y <= MAX; y += sphereInterval){
@@ -231,11 +219,11 @@ function loadFont() {
 function createText(text, position) {
 	var material = new THREE.MultiMaterial([
 		new THREE.MeshPhongMaterial({
-			color: 0xffffff,
+			color: 0xF8F206,
 			shading: THREE.FlatShading
 		}), // front
 		new THREE.MeshPhongMaterial({
-			color: 0xffffff,
+			color: 0xFFE200,
 			shading: THREE.SmoothShading
 		}) // side
 	]);
@@ -258,13 +246,16 @@ function createText(text, position) {
 	textGeo.computeBoundingBox();
 	textGeo.computeVertexNormals();
 
-	var centerOffset = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
+	var centerOffset_x = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
+	var centerOffset_y = -0.5 * (textGeo.boundingBox.max.y - textGeo.boundingBox.min.y);
+	var centerOffset_z = -0.5 * (textGeo.boundingBox.max.z - textGeo.boundingBox.min.z);
+
 
 	var textMesh1 = new THREE.Mesh(textGeo, material);
 
-	textMesh1.position.x = centerOffset;
-	textMesh1.position.y = textHover;
-	textMesh1.position.z = 0;
+	textMesh1.position.x = centerOffset_x;
+	textMesh1.position.y = centerOffset_y;
+	textMesh1.position.z = centerOffset_z;
 
 	textMesh1.rotation.x = 0;
 	textMesh1.rotation.y = Math.PI * 2;
@@ -280,7 +271,7 @@ function onDocumentMouseDown(event) {
 	var intersects = raycaster.intersectObjects(objects);
 	if (intersects.length > 0) {
 		intersect = intersects[0].object;
-		if (!isShiftDown) {
+		if ( event.button === 0 ) {
 			if (intersect.state === GAMESTATE_DEFAULT && !intersect.isBomb) {
 				// safe
 				intersect.state = GAMESTATE_SAFE;
@@ -292,7 +283,7 @@ function onDocumentMouseDown(event) {
 				intersect.state = GAMESTATE_BOMB;
 				intersect.material.color = new THREE.Color(color_bomb);
 			}
-		} else {
+		} else if (event.button === 2){
 			if (intersect.state === GAMESTATE_DEFAULT) {
 				// lift flag
 				intersect.state = GAMESTATE_DANGEROUS;
@@ -304,22 +295,6 @@ function onDocumentMouseDown(event) {
 			}
 		}
 
-	}
-}
-
-function onDocumentKeyDown(event) {
-	switch (event.keyCode) {
-		case 16:
-			isShiftDown = true;
-			break;
-	}
-}
-
-function onDocumentKeyUp(event) {
-	switch (event.keyCode) {
-		case 16:
-			isShiftDown = false;
-			break;
 	}
 }
 
