@@ -39,6 +39,9 @@ var sphereInterval = cubeWidth / (numberOfSphersPerSide - 1 );
 var sphereRadius = (cubeWidth / numberOfSphersPerSide) * 0.8 * 0.5;
 var sphereOffset = -200;
 
+var numberOfBomb = Math.ceil(Math.pow(numberOfSphersPerSide, 3) * 0.1);
+var clickedSafeBSphere = 0;
+
 // text
 var textSize = sphereRadius;
 var textHeight = textSize / 4;
@@ -119,7 +122,6 @@ function init(font) {
 	}
 
 	// game
-	var numberOfBomb = Math.ceil(Math.pow(numberOfSphersPerSide, 3) * 0.1);
 	gameInit(numberOfBomb);
 
 	// RENDER
@@ -321,6 +323,7 @@ function onDocumentMouseDown(event) {
 				// safe
 				intersect.state = GAMESTATE_SAFE;
 				intersect.bombNum = getBombNum(intersect);
+				clickedSafeBSphere++;
 				if (intersect.bombNum === 0) {
 					dominoEffect(intersect);
 				}
@@ -363,6 +366,7 @@ function  dominoEffect(mesh) {
 		// safe
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
+		clickedSafeBSphere++;
 		scene.remove( object );
 		if (object.bombNum === 0) {
 			dominoEffect(object);
@@ -376,6 +380,7 @@ function  dominoEffect(mesh) {
 		// safe
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
+		clickedSafeBSphere++;
 		scene.remove( object );
 		if (object.bombNum === 0) {
 			dominoEffect(object);
@@ -390,6 +395,7 @@ function  dominoEffect(mesh) {
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
 		scene.remove( object );
+		clickedSafeBSphere++;
 		if (object.bombNum === 0) {
 			dominoEffect(object);
 		}
@@ -403,6 +409,7 @@ function  dominoEffect(mesh) {
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
 		scene.remove( object );
+		clickedSafeBSphere++;
 		if (object.bombNum === 0) {
 			dominoEffect(object);
 		}
@@ -416,6 +423,7 @@ function  dominoEffect(mesh) {
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
 		scene.remove( object );
+		clickedSafeBSphere++;
 		if (object.bombNum === 0) {
 			dominoEffect(object);
 		}
@@ -429,6 +437,7 @@ function  dominoEffect(mesh) {
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
 		scene.remove( object );
+		clickedSafeBSphere++;
 		if (object.bombNum === 0) {
 			dominoEffect(object);
 		}
