@@ -38,6 +38,7 @@ var cubeWidth = 400;
 var sphereInterval = cubeWidth / (numberOfSphersPerSide - 1 );
 var sphereRadius = (cubeWidth / numberOfSphersPerSide) * 0.8 * 0.5;
 var sphereOffset = -200;
+var numberOfBomb = Math.ceil(Math.pow(numberOfSphersPerSide, 3) * 0.1);
 
 // text
 var textSize = sphereRadius;
@@ -119,7 +120,7 @@ function init(font) {
 	}
 
 	// game
-	var numberOfBomb = Math.ceil(Math.pow(numberOfSphersPerSide, 3) * 0.1);
+
 	gameInit(numberOfBomb);
 
 	// RENDER
@@ -238,10 +239,6 @@ function addBorder(){
 
 }
 
-function sleep (time) {
-  return new Promise((resolve) => setTimeout(resolve, time));
-}
-
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
@@ -328,6 +325,7 @@ function onDocumentMouseDown(event) {
 					createText("" + intersect.bombNum, intersect.position);
 				}
 				scene.remove( intersect );
+				// if(objects)
 			}
 			else if (intersect.state === GAMESTATE_DEFAULT && intersect.isBomb) {
 				gameOver();
@@ -462,10 +460,6 @@ function render() {
 
 	var timer = Date.now() * 0.00025;
 	camera.lookAt(scene.position);
-	for (var i = 0, l = objects.length; i < l; i++) {
-		var object = objects[i];
-		object.rotation.y += 0.005;
-	}
 	for(var i = 0, l = texts.length; i < l; i ++){
 		texts[i].rotation.x = camera.rotation.x;
 		texts[i].rotation.y = camera.rotation.y;
