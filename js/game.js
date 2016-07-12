@@ -379,88 +379,24 @@ function  dominoEffect(mesh) {
 	var y_max = mesh.position_y + 1 < numberOfSphersPerSide ? mesh.position_y + 1 : numberOfSphersPerSide - 1;
 	var z_max = mesh.position_z + 1 < numberOfSphersPerSide ? mesh.position_z + 1 : numberOfSphersPerSide - 1;
 	var object;
-	object = position_objects[x_min][mesh.position_y][mesh.position_z];
-	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
-		// safe
-		object.state = GAMESTATE_SAFE;
-		object.bombNum = getBombNum(object);
-		clickedSafeBSphere++;
-		scene.remove( object );
-		if (object.bombNum === 0) {
-			dominoEffect(object);
-		}
-		else {
-			createText("" + object.bombNum, object.position);
-		}
-	}
-	object = position_objects[x_max][mesh.position_y][mesh.position_z];
-	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
-		// safe
-		object.state = GAMESTATE_SAFE;
-		object.bombNum = getBombNum(object);
-		clickedSafeBSphere++;
-		scene.remove( object );
-		if (object.bombNum === 0) {
-			dominoEffect(object);
-		}
-		else {
-			createText("" + object.bombNum, object.position);
-		}
-	}
-	object = position_objects[mesh.position_x][y_min][mesh.position_z];
-	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
-		// safe
-		object.state = GAMESTATE_SAFE;
-		object.bombNum = getBombNum(object);
-		scene.remove( object );
-		clickedSafeBSphere++;
-		if (object.bombNum === 0) {
-			dominoEffect(object);
-		}
-		else {
-			createText("" + object.bombNum, object.position);
-		}
-	}
-	object = position_objects[mesh.position_x][y_max][mesh.position_z];
-	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
-		// safe
-		object.state = GAMESTATE_SAFE;
-		object.bombNum = getBombNum(object);
-		scene.remove( object );
-		clickedSafeBSphere++;
-		if (object.bombNum === 0) {
-			dominoEffect(object);
-		}
-		else {
-			createText("" + object.bombNum, object.position);
-		}
-	}
-	object = position_objects[mesh.position_x][mesh.position_y][z_min];
-	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
-		// safe
-		object.state = GAMESTATE_SAFE;
-		object.bombNum = getBombNum(object);
-		scene.remove( object );
-		clickedSafeBSphere++;
-		if (object.bombNum === 0) {
-			dominoEffect(object);
-		}
-		else {
-			createText("" + object.bombNum, object.position);
-		}
-	}
-	object = position_objects[mesh.position_x][mesh.position_y][z_max];
-	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
-		// safe
-		object.state = GAMESTATE_SAFE;
-		object.bombNum = getBombNum(object);
-		scene.remove( object );
-		clickedSafeBSphere++;
-		if (object.bombNum === 0) {
-			dominoEffect(object);
-		}
-		else {
-			createText("" + object.bombNum, object.position);
+	for(var i = x_min; i <= x_max; i++){
+		for (var j = y_min;j <= y_max;j++){
+			for (var k = z_min;k <= z_max;k++){
+				object = position_objects[i][j][k];
+				if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
+					// safe
+					object.state = GAMESTATE_SAFE;
+					object.bombNum = getBombNum(object);
+					clickedSafeBSphere++;
+					scene.remove( object );
+					if (object.bombNum === 0) {
+						dominoEffect(object);
+					}
+					else {
+						createText("" + object.bombNum, object.position);
+					}
+				}
+			}
 		}
 	}
 }
