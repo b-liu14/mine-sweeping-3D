@@ -1,92 +1,112 @@
+// color
 var color_default = 0x23EA14;
 var color_safe = 0x1A25E4;
 var color_dangerous = 0xEB1318;
+var color_bomb = 0x000000;
+
 // text
-var textSize = 70;
-var textHeight = textSize;
+var textSize = 40;
+var textHeight = textSize / 4;
 var textFontUrl = 'fonts/optimer_bold.typeface.json';
-var textHover = 30;
-var mirror = false;
+var textHover = 0;
+var font = null;
 
+// sphere
+var sphereInterval = 120;
+var sphereOffset = -200;
+// GameState
+var GAMESTATE_DEFAULT = 0;
+var GAMESTATE_SAFE = 1;
+var GAMESTATE_DANGEROUS = 2;
+var GAMESTATE_BOMB = 3;
 
+//
 if (!Detector.webgl)
 	Detector.addGetWebGLMessage();
 var container, stats;
 var camera, scene, renderer, controls, objects = [];
-var particleLight;
-var mouse,intersect,raycaster,isShiftDown = false;
+var mouse, intersect, raycaster, isShiftDown = false;
 var loader = new THREE.FontLoader();
-loader.load('fonts/gentilis_regular.typeface.json', function(font) {
+
+//
+var numberOfSphersPerSide = 5;
+
+//init 3D objects Array
+var position_objects = new Array(numberOfSphersPerSide);
+for (var i = 0; i < position_objects.length; i++) {
+	position_objects[i] = new Array(numberOfSphersPerSide);
+}
+for (var i = 0; i < position_objects.length; i++) {
+	for (var j = 0; j < position_objects[i].length; j++) {
+		position_objects[i][j] = new Array(numberOfSphersPerSide);
+	}
+}
+
+loader.load('fonts/gentilis_regular.typeface.json', function(_font) {
+	font = _font;
 	init(font);
 	animate();
 });
 
 function init(font) {
+	//
 	container = document.createElement('div');
 	document.body.appendChild(container);
+
+	// camera = new THREE.CubeCamera( 1, 100000, 128 );
+
 	camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 2000);
 	camera.position.set(0.0, 400, 400 * 3.5);
-	//
+
+	// Background
 	var reflectionCube = new THREE.CubeTextureLoader()
-		.setPath('textures/cube/SwedishRoyalCastle/')
+		.setPath('textures/cube/Park3Med/')
 		.load(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']);
 	reflectionCube.format = THREE.RGBFormat;
 	scene = new THREE.Scene();
 	scene.background = reflectionCube;
-	// Materials
-	var imgTexture = new THREE.TextureLoader().load("textures/planets/moon_1024.jpg");
-	imgTexture.wrapS = imgTexture.wrapT = THREE.RepeatWrapping;
-	imgTexture.anisotropy = 16;
-	imgTexture = null;
-	var shininess = 50,
-		specular = 0x333333,
-		shading = THREE.SmoothShading;
-	var materials = [];
+
 	var cubeWidth = 400;
-	var numberOfSphersPerSide = 5;
-	var sphereRadius = (cubeWidth / numberOfSphersPerSide) * 0.8 * 0.5;
-	var stepSize = 1.0 / numberOfSphersPerSide;
+	var sphereRadius = (cubeWidth / numberOfSphersPerSide) * 0.7 * 0.5;
 	var geometry = new THREE.SphereBufferGeometry(sphereRadius, 32, 16);
 	raycaster = new THREE.Raycaster();
 	mouse = new THREE.Vector2();
 
-	for(var x = 0; x < numberOfSphersPerSide; x++){
+	// sphere
+	for (var x = 0; x < numberOfSphersPerSide; x++) {
 		for (var y = 0; y < numberOfSphersPerSide; y++) {
-			for(var z = 0; z < numberOfSphersPerSide; z++){
-				var material = new THREE.MeshBasicMaterial( {color:color_default} );
-				var mesh = new THREE.Mesh( geometry,  material);
-				mesh.position.x = x * 150 - 200;
-				mesh.position.y = y * 150 - 200;
-				mesh.position.z = z * 150 - 200;
+			for (var z = 0; z < numberOfSphersPerSide; z++) {
+				// var material = new THREE.MeshBasicMaterial({
+				// 	color: color_default
+				// });
+				var material = new THREE.MeshPhongMaterial( {
+					color: color_default,
+					specular: 0x00FF64,
+					shininess: 30,
+					shading: THREE.SmoothShading
+				} )
+				var mesh = new THREE.Mesh(geometry, material);
+				mesh.position.x = x * sphereInterval + sphereOffset;
+				mesh.position.y = y * sphereInterval + sphereOffset;
+				mesh.position.z = z * sphereInterval + sphereOffset;
 				//init the state of balls
-				mesh.state = 0;
+				mesh.state = GAMESTATE_DEFAULT;
+				mesh.bombNum = 0;
+				mesh.position_x = x;
+				mesh.position_y = y;
+				mesh.position_z = z;
+
 				objects.push(mesh);
+				position_objects[x][y][z] = mesh;
 				scene.add(mesh);
 			}
 		}
 	}
 
-	//
+	// game
 	var numberOfBomb = 20;
 	gameInit(numberOfBomb);
-	createText("test text", new THREE.Vector3( 1, 0, 0 ))
-	loadFont("test text", new THREE.Vector3(1, 0, 0));
 
-
-	// function addLabel(name, location) {
-	// 	var textGeo = new THREE.TextGeometry(name, {
-	// 		font: font,
-	// 		size: 20,
-	// 		height: 1,
-	// 		curveSegments: 1
-	// 	});
-	// 	var textMaterial = new THREE.MeshBasicMaterial({
-	// 		color: 0xffffff
-	// 	});
-	// 	var textMesh = new THREE.Mesh(textGeo, textMaterial);
-	// 	textMesh.position.copy(location);
-	// 	scene.add(textMesh);
-	// }
 
 	// RENDER
 	renderer = new THREE.WebGLRenderer({
@@ -106,29 +126,80 @@ function init(font) {
 	controls.target.set(0, 0, 0);
 	controls.update();
 	// EVENT LISTENER
-	document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-	document.addEventListener( 'keydown', onDocumentKeyDown, false );
-	document.addEventListener( 'keyup', onDocumentKeyUp, false );
+	document.addEventListener('mousedown', onDocumentMouseDown, false);
+	document.addEventListener('keydown', onDocumentKeyDown, false);
+	document.addEventListener('keyup', onDocumentKeyUp, false);
 	window.addEventListener('resize', onWindowResize, false);
 
 	// LIGHT
-	var dirLight = new THREE.DirectionalLight( 0xffffff, 0.125 );
-	dirLight.position.set( 0, 0, 1 ).normalize();
-	scene.add( dirLight );
+	var dirLight = new THREE.DirectionalLight(0xffffff, 0.125);
+	dirLight.position.set(0, 0, 1).normalize();
+	scene.add(dirLight);
 
-	var pointLight = new THREE.PointLight( 0xffffff, 1.5 );
+	var pointLight = new THREE.PointLight(0xffffff, 1.5);
 	pointLight.color.setHex(color_safe);
-	pointLight.position.set( 0, 100, 90 );
-	scene.add( pointLight );
+	pointLight.position.set(0, 100, 90);
+	scene.add(pointLight);
 }
 // To decide which object is bomb.
-function gameInit(numberOfBomb){
+function gameInit(numberOfBomb) {
 	var bombReserve = numberOfBomb;
-	for(var i = 0, l = objects.length; i < l; i ++){
+	var count = 0;
+	for (var i = 0, l = objects.length; i < l; i++) {
 		var p = bombReserve / (l - i);
-		objects[i].isBomb = (Math.random() <= p);
+		if(Math.random() <= p){
+			objects[i].isBomb = true;
+			bombReserve --;
+		}
+		else{
+			objects[i].isBomb = false;
+		}
+		count += objects[i].isBomb ? 1 : 0;
 	}
+	console.log(count);
+
+	addBorder();
 }
+
+function addBorder(){
+	var material = new THREE.LineBasicMaterial({
+		color: 0x00E6FF
+	});
+	var coodinate_value = function(index){
+		return sphereOffset + sphereInterval * (index - 1/2);
+	}
+	var MAX = coodinate_value(numberOfSphersPerSide);
+	var MIN = coodinate_value(0);
+	for(var x = MIN; x <= MAX; x += sphereInterval){
+		for(var y = MIN; y <= MAX; y += sphereInterval){
+			var geometry_1 = new THREE.Geometry();
+			geometry_1.vertices.push(
+				new THREE.Vector3( MIN, x, y ),
+				new THREE.Vector3( MAX, x, y )
+			);
+			var line_1 = new THREE.Line( geometry_1, material );
+			scene.add( line_1 );
+
+			var geometry_2 = new THREE.Geometry();
+			geometry_2.vertices.push(
+				new THREE.Vector3( x, MIN, y ),
+				new THREE.Vector3( x, MAX, y )
+			);
+			var line_2 = new THREE.Line( geometry_2, material );
+			scene.add( line_2 );
+
+			var geometry_3 = new THREE.Geometry();
+			geometry_3.vertices.push(
+				new THREE.Vector3( x, y, MIN ),
+				new THREE.Vector3( x, y, MAX )
+			);
+			var line_3 = new THREE.Line( geometry_3, material );
+			scene.add( line_3 );
+		}
+	}
+
+}
+
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
@@ -141,28 +212,33 @@ function animate() {
 	stats.update();
 }
 
-function loadFont(text, position){
+function loadFont() {
 	var loader = new THREE.FontLoader();
-	var font = null;
-	loader.load( textFontUrl, function ( response ) {
-		debugger;
+	loader.load(textFontUrl, function(response) {
 		font = response;
-		createText(text, font, position);
-	} );
-	return font;
+	});
 }
-function createText(text, font, position) {
-	var material = new THREE.MultiMaterial( [
-		new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THREE.FlatShading } ), // front
-		new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THREE.SmoothShading } ) // side
-	] );
+
+function createText(text, position) {
+	var material = new THREE.MultiMaterial([
+		new THREE.MeshPhongMaterial({
+			color: 0xffffff,
+			shading: THREE.FlatShading
+		}), // front
+		new THREE.MeshPhongMaterial({
+			color: 0xffffff,
+			shading: THREE.SmoothShading
+		}) // side
+	]);
 
 	var group = new THREE.Group();
-	group.position = position;
+	group.position.x = position.x;
+	group.position.y = position.y;
+	group.position.z = position.z;
 
-	scene.add( group );
+	scene.add(group);
 
-	var textGeo = new THREE.TextGeometry( text, {
+	var textGeo = new THREE.TextGeometry(text, {
 		font: font,
 		size: textSize,
 		height: textHeight,
@@ -173,9 +249,9 @@ function createText(text, font, position) {
 	textGeo.computeBoundingBox();
 	textGeo.computeVertexNormals();
 
-	var centerOffset = -0.5 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
+	var centerOffset = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
 
-	var textMesh1 = new THREE.Mesh( textGeo, material );
+	var textMesh1 = new THREE.Mesh(textGeo, material);
 
 	textMesh1.position.x = centerOffset;
 	textMesh1.position.y = textHover;
@@ -184,79 +260,82 @@ function createText(text, font, position) {
 	textMesh1.rotation.x = 0;
 	textMesh1.rotation.y = Math.PI * 2;
 
-	group.add( textMesh1 );
+	group.add(textMesh1);
+}
 
-	if ( mirror ) {
-
-		var textMesh2 = new THREE.Mesh( textGeo, material );
-
-		textMesh2.position.x = centerOffset;
-		textMesh2.position.y = -textHover;
-		textMesh2.position.z = textHeight;
-
-		textMesh2.rotation.x = Math.PI;
-		textMesh2.rotation.y = Math.PI * 2;
-
-		group.add( textMesh2 );
+function onDocumentMouseDown(event) {
+	event.preventDefault();
+	mouse.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
+	raycaster.setFromCamera(mouse, camera);
+	var intersects = raycaster.intersectObjects(objects);
+	if (intersects.length > 0) {
+		intersect = intersects[0].object;
+		if (!isShiftDown) {
+			if (intersect.state === GAMESTATE_DEFAULT && !intersect.isBomb) {
+				// safe
+				intersect.state = GAMESTATE_SAFE;
+				intersect.bombNum = getBombNum(intersect);
+				createText("" + intersect.bombNum, intersect.position);
+				scene.remove( intersect );
+			} else if (intersect.state === GAMESTATE_DEFAULT && intersect.isBomb) {
+				// bomb
+				intersect.state = GAMESTATE_BOMB;
+				intersect.material.color = new THREE.Color(color_bomb);
+			}
+		} else {
+			if (intersect.state === GAMESTATE_DEFAULT) {
+				// lift flag
+				intersect.state = GAMESTATE_DANGEROUS;
+				intersect.material.color = new THREE.Color(color_dangerous);
+			} else if (intersect.state === GAMESTATE_DANGEROUS){
+				// init state
+				intersect.state = GAMESTATE_DEFAULT;
+				intersect.material.color = new THREE.Color(color_default);
+			}
+		}
 
 	}
 }
 
-function onDocumentMouseDown( event ) {
-	event.preventDefault();
-	mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
-	raycaster.setFromCamera( mouse, camera );
-	var intersects = raycaster.intersectObjects( objects );
-	if ( intersects.length > 0 ) {
-		intersect = intersects[ 0 ].object;
-		if ( !isShiftDown ) {
-			if ( intersect.state === 0 ) {
-				intersect.state = 1;
-			}
-		} else {
-			if (intersect.state === 0) {
-				intersect.state = 2;
-			}
-			else {
-				intersect.state = 0;
+function onDocumentKeyDown(event) {
+	switch (event.keyCode) {
+		case 16:
+			isShiftDown = true;
+			break;
+	}
+}
+
+function onDocumentKeyUp(event) {
+	switch (event.keyCode) {
+		case 16:
+			isShiftDown = false;
+			break;
+	}
+}
+
+function getBombNum(mesh) {
+	var bombNum = 0;
+	var x_min = mesh.position_x - 1 >= 0 ? mesh.position_x - 1 : 0;
+	var y_min = mesh.position_y - 1 >= 0 ? mesh.position_y - 1 : 0;
+	var z_min = mesh.position_z - 1 >= 0 ? mesh.position_z - 1 : 0;
+	var x_max = mesh.position_x + 1 < numberOfSphersPerSide ? mesh.position_x + 1 : numberOfSphersPerSide - 1;
+	var y_max = mesh.position_y + 1 < numberOfSphersPerSide ? mesh.position_y + 1 : numberOfSphersPerSide - 1;
+	var z_max = mesh.position_z + 1 < numberOfSphersPerSide ? mesh.position_z + 1 : numberOfSphersPerSide - 1;
+	for (var i = x_min; i <= x_max; i++) {
+		for (var j = y_min; j <= y_max; j++) {
+			for (var k = z_min; k <= z_max; k++) {
+				if (position_objects[i][j][k].isBomb) {
+					bombNum++;
+				}
 			}
 		}
 	}
+	return bombNum;
 }
-function onDocumentKeyDown( event ) {
-	switch( event.keyCode ) {
-		case 16: isShiftDown = true;
-		break;
-	}
-}
-function onDocumentKeyUp( event ) {
-	switch ( event.keyCode ) {
-		case 16: isShiftDown = false;
-		break;
-	}
-}
+
 function render() {
 	var timer = Date.now() * 0.00025;
 	camera.lookAt(scene.position);
-	raycaster.setFromCamera( mouse, camera );
-	var intersects = raycaster.intersectObjects( objects );
-	if (intersects.length > 0) {
-		intersect = intersects[0].object;
-		switch (intersect.state) {
-			case 0:
-				intersect.material.color = new THREE.Color(color_default);
-				break;
-			case 1:
-				intersect.material.color = new THREE.Color(color_safe);
-				break;
-			case 2:
-				intersect.material.color = new THREE.Color(color_dangerous);
-				break;
-			default:
-				// statements_def
-				break;
-		}
-	}
 	for (var i = 0, l = objects.length; i < l; i++) {
 		var object = objects[i];
 		object.rotation.y += 0.005;
