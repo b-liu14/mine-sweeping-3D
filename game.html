@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>3D-MineWeeper</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #fff;
+				font-family:Monospace;
+				font-size:25px;
+				text-align:center;
+				background-color: #000;
+				margin: 0px;
+				overflow: hidden;
+			}
+			.info {
+				position: absolute;
+
+				top: 0px;
+				left: 400px;
+				padding: 5px;
+				width: 200px;
+			}
+			#bomb {
+				height: 50px;
+				width: 100px;
+				float: left;
+			}
+			#timer {
+				height: 50px;
+				width: 100px;
+				float: left;
+			}
+			.icon {
+				width: 50px;
+				height: 50px;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="container"></div>
+		<div  class="info">
+			<div id="timer">
+				<img src="image/timer.png" class="icon">
+				<span id="ReservedTime"> 1</span>
+			</div>
+			<div id="bomb">
+				<img src="image/bomb.png" class="icon">
+				<span id="numbersOfReservedBombs">20</span>
+			</div>
+		</div>
+
+		<script src="js/three.js"></script>
+		<script src="js/three.min.js"></script>
+		<script src="js/controls/OrbitControls.js"></script>
+		<script src="js/Detector.js"></script>
+		<script src="js/libs/stats.min.js"></script>
+		<script src="js/utils/GeometryUtils.js"></script>
+		<script src="js/loaders/DDSLoader.js"></script>
+		<script src="js/loaders/MTLLoader.js"></script>
+		<script src="js/loaders/OBJLoader.js"></script>
+		<script src="js/loaders/collada/Animation.js"></script>
+		<script src="js/loaders/collada/AnimationHandler.js"></script>
+		<script src="js/loaders/collada/KeyFrameAnimation.js"></script>
+		<script src="js/loaders/ColladaLoader.js"></script>
+
+		<script src="js/index.js"></script>
+
+	</body>
+</html>
+
+
+<!-- TODO -->
+<!-- 1.游戏初始界面，选择边长，炸弹个数 -->
+<!-- 2.游戏结束界面，重新开始，显示分数，时间 -->
+<!-- 3.游戏界面，timer，炸弹数量 -->
