@@ -278,7 +278,11 @@ function onDocumentMouseDown(event) {
 				intersect.bombNum = getBombNum(intersect);
 				createText("" + intersect.bombNum, intersect.position);
 				scene.remove( intersect );
-			} else if (intersect.state === GAMESTATE_DEFAULT && intersect.isBomb) {
+				if (intersect.bombNum === 0) {
+					dominoEffect(intersect);
+				}
+			} 
+			else if (intersect.state === GAMESTATE_DEFAULT && intersect.isBomb) {
 				// bomb
 				intersect.state = GAMESTATE_BOMB;
 				intersect.material.color = new THREE.Color(color_bomb);
@@ -288,7 +292,8 @@ function onDocumentMouseDown(event) {
 				// lift flag
 				intersect.state = GAMESTATE_DANGEROUS;
 				intersect.material.color = new THREE.Color(color_dangerous);
-			} else if (intersect.state === GAMESTATE_DANGEROUS){
+			} 
+			else if (intersect.state === GAMESTATE_DANGEROUS){
 				// init state
 				intersect.state = GAMESTATE_DEFAULT;
 				intersect.material.color = new THREE.Color(color_default);
@@ -311,6 +316,83 @@ function onDocumentKeyUp(event) {
 		case 16:
 			isShiftDown = false;
 			break;
+	}
+}
+
+//to get all the zero objectt
+function  dominoEffect(mesh) {
+	var x_min = mesh.position_x - 1 >= 0 ? mesh.position_x - 1 : 0;
+	var y_min = mesh.position_y - 1 >= 0 ? mesh.position_y - 1 : 0;
+	var z_min = mesh.position_z - 1 >= 0 ? mesh.position_z - 1 : 0;
+	var x_max = mesh.position_x + 1 < numberOfSphersPerSide ? mesh.position_x + 1 : numberOfSphersPerSide - 1;
+	var y_max = mesh.position_y + 1 < numberOfSphersPerSide ? mesh.position_y + 1 : numberOfSphersPerSide - 1;
+	var z_max = mesh.position_z + 1 < numberOfSphersPerSide ? mesh.position_z + 1 : numberOfSphersPerSide - 1;
+	var object;
+	object = position_objects[x_min][mesh.position_y][mesh.position_z];
+	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
+		// safe
+		object.state = GAMESTATE_SAFE;
+		object.bombNum = getBombNum(object);
+		createText("" + object.bombNum, object.position);
+		scene.remove( object );
+		if (object.bombNum === 0) {
+			dominoEffect(object);
+		}
+	} 
+	object = position_objects[x_max][mesh.position_y][mesh.position_z];
+	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
+		// safe
+		object.state = GAMESTATE_SAFE;
+		object.bombNum = getBombNum(object);
+		createText("" + object.bombNum, object.position);
+		scene.remove( object );
+		if (object.bombNum === 0) {
+			dominoEffect(object);
+		}
+	} 
+	object = position_objects[mesh.position_x][y_min][mesh.position_z];
+	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
+		// safe
+		object.state = GAMESTATE_SAFE;
+		object.bombNum = getBombNum(object);
+		createText("" + object.bombNum, object.position);
+		scene.remove( object );
+		if (object.bombNum === 0) {
+			dominoEffect(object);
+		}
+	}
+	object = position_objects[mesh.position_x][y_max][mesh.position_z];
+	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
+		// safe
+		object.state = GAMESTATE_SAFE;
+		object.bombNum = getBombNum(object);
+		createText("" + object.bombNum, object.position);
+		scene.remove( object );
+		if (object.bombNum === 0) {
+			dominoEffect(object);
+		}
+	}
+	object = position_objects[mesh.position_x][mesh.position_y][z_min];
+	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
+		// safe
+		object.state = GAMESTATE_SAFE;
+		object.bombNum = getBombNum(object);
+		createText("" + object.bombNum, object.position);
+		scene.remove( object );
+		if (object.bombNum === 0) {
+			dominoEffect(object);
+		}
+	}
+	object = position_objects[mesh.position_x][mesh.position_y][z_max];
+	if (object.state === GAMESTATE_DEFAULT && !object.isBomb) {
+		// safe
+		object.state = GAMESTATE_SAFE;
+		object.bombNum = getBombNum(object);
+		createText("" + object.bombNum, object.position);
+		scene.remove( object );
+		if (object.bombNum === 0) {
+			dominoEffect(object);
+		}
 	}
 }
 
