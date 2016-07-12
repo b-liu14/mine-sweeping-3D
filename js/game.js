@@ -20,17 +20,15 @@ var loader = new THREE.FontLoader();
 
 // get the number of sphers per side
 var difficulty2NumberOfShperes = {
-	"easy": 3,
-	"middle": 4,
-	"hard": 5,
-	"nightmare": 6
+	"EASY": 3,
+	"MIDDLE": 4,
+	"HARD": 5,
+	"NIGHTMARE": 6
 }
+debugger;
 var numberOfSphersPerSide = difficulty2NumberOfShperes[ localStorage[ "difficulty" ] ];
 if(typeof numberOfSphersPerSide !== "number"){
 	numberOfSphersPerSide = difficulty2NumberOfShperes["easy"];
-}
-else {
-	localStorage.removeItem("difficulty");
 }
 
 // sphere
@@ -38,7 +36,9 @@ var cubeWidth = 400;
 var sphereInterval = cubeWidth / (numberOfSphersPerSide - 1 );
 var sphereRadius = (cubeWidth / numberOfSphersPerSide) * 0.8 * 0.5;
 var sphereOffset = -200;
+var numberOfSphers = numberOfSphersPerSide * numberOfSphersPerSide * numberOfSphersPerSide;
 var numberOfBomb = Math.ceil(Math.pow(numberOfSphersPerSide, 3) * 0.1);
+var numberOfClickedSphere = 0;
 
 // text
 var textSize = sphereRadius;
@@ -120,7 +120,6 @@ function init(font) {
 	}
 
 	// game
-
 	gameInit(numberOfBomb);
 
 	// RENDER
@@ -199,6 +198,20 @@ function gameOver() {
 	alert("game over!\n");
 	localStorage["GameState"] = "gameOver";
 	window.location.href="index.html";
+	localStorage.removeItem("difficulty");
+}
+
+function gameVictory() {
+	for(var i = 0, l = objects.length; i < l; i ++){
+		if(objects[i].isBomb){
+			objects[i].material.color = new THREE.Color(color_bomb);
+		}
+	}
+	renderer.render(scene, camera);
+	alert("game victory!\n");
+	localStorage["GameState"] = "gameVictory";
+	window.location.href="index.html";
+	localStorage.removeItem("difficulty");
 }
 
 function coodinate_value (index){
@@ -209,8 +222,9 @@ function addBorder(){
 	var material = new THREE.LineBasicMaterial({
 		color: 0xFFFFFF
 	});
-	for(var x = MIN; x <= MAX; x += sphereInterval){
-		for(var y = MIN; y <= MAX; y += sphereInterval){
+	// add 0.5 to MAX to avoid the floor error
+	for(var x = MIN; x <= MAX + 0.5; x += sphereInterval){
+		for(var y = MIN; y <= MAX + 0.5; y += sphereInterval){
 			var geometry_1 = new THREE.Geometry();
 			geometry_1.vertices.push(
 				new THREE.Vector3( MIN, x, y ),
@@ -236,7 +250,6 @@ function addBorder(){
 			scene.add( line_3 );
 		}
 	}
-
 }
 
 function onWindowResize() {
@@ -318,6 +331,7 @@ function onDocumentMouseDown(event) {
 				// safe
 				intersect.state = GAMESTATE_SAFE;
 				intersect.bombNum = getBombNum(intersect);
+				numberOfClickedSphere++;
 				if (intersect.bombNum === 0) {
 					dominoEffect(intersect);
 				}
@@ -325,7 +339,9 @@ function onDocumentMouseDown(event) {
 					createText("" + intersect.bombNum, intersect.position);
 				}
 				scene.remove( intersect );
-				// if(objects)
+				if(numberOfClickedSphere + numberOfBomb === numberOfSphers){
+					gameVictory();
+				}
 			}
 			else if (intersect.state === GAMESTATE_DEFAULT && intersect.isBomb) {
 				gameOver();
@@ -361,6 +377,7 @@ function  dominoEffect(mesh) {
 		// safe
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
+		numberOfClickedSphere++;
 		scene.remove( object );
 		if (object.bombNum === 0) {
 			dominoEffect(object);
@@ -374,6 +391,7 @@ function  dominoEffect(mesh) {
 		// safe
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
+		numberOfClickedSphere++;
 		scene.remove( object );
 		if (object.bombNum === 0) {
 			dominoEffect(object);
@@ -388,6 +406,7 @@ function  dominoEffect(mesh) {
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
 		scene.remove( object );
+		numberOfClickedSphere++;
 		if (object.bombNum === 0) {
 			dominoEffect(object);
 		}
@@ -401,6 +420,7 @@ function  dominoEffect(mesh) {
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
 		scene.remove( object );
+		numberOfClickedSphere++;
 		if (object.bombNum === 0) {
 			dominoEffect(object);
 		}
@@ -414,6 +434,7 @@ function  dominoEffect(mesh) {
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
 		scene.remove( object );
+		numberOfClickedSphere++;
 		if (object.bombNum === 0) {
 			dominoEffect(object);
 		}
@@ -427,6 +448,7 @@ function  dominoEffect(mesh) {
 		object.state = GAMESTATE_SAFE;
 		object.bombNum = getBombNum(object);
 		scene.remove( object );
+		numberOfClickedSphere++;
 		if (object.bombNum === 0) {
 			dominoEffect(object);
 		}
