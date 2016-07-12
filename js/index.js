@@ -91,6 +91,7 @@ function init(font) {
 				mesh.position.z = z * sphereInterval + sphereOffset;
 				//init the state of balls
 				mesh.state = GAMESTATE_DEFAULT;
+
 				mesh.bombNum = 0;
 				mesh.position_x = x;
 				mesh.position_y = y;
@@ -313,7 +314,7 @@ function onDocumentKeyUp(event) {
 	}
 }
 
-function getBombNum(mesh) {
+function getBombNum (mesh) {
 	var bombNum = 0;
 	var x_min = mesh.position_x - 1 >= 0 ? mesh.position_x - 1 : 0;
 	var y_min = mesh.position_y - 1 >= 0 ? mesh.position_y - 1 : 0;
