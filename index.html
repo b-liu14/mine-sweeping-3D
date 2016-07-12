@@ -4,44 +4,27 @@
 		<title>3D bomb sweeper</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<style>
-			body {
-				font-family: Monospace;
-				background-color: #000;
-				color: #fff;
-				margin: 0px;
-				overflow: hidden;
-				font-size: 3vw;
-			}
-			#info {
-				position: absolute;
-				/*background-color:*/
-				top: 30vh;
-				width: 100%;
-				text-align: center;
-				z-index: 100;
-				display:block;
-			}
-			#info a, .button {
-				color: #f00;
-				font-weight: bold;
-				text-decoration: underline;
-				cursor: pointer
-			}
-		</style>
+		<link rel="stylesheet" type="text/css" href="css/style.css">
 	</head>
 	<body>
+		<div id="gameName">3D MINE SWEEPING</div>
 		<div id="info">
-			<div id="gameStatus">CHOOSE THE DIFFICULTY</div>
-			<div id="chooseGameDifficulty">
-				<div class="button" id="easy">easy</div>
-				<div class="button" id="middle">middle</div>
-				<div class="button" id="hard">hard</div>
-				<div class="button" id="nightmare">nightmare</div>
+			<div id="chooseGameDifficulty" onclick="chooseGameDifficulty(event)">
+				<a class="button" href="game.html">easy</a><br/>
+				<a class="button" href="game.html">middle</a><br/>
+				<a class="button" href="game.html">hard</a><br/>
+				<a class="button" href="game.html">nightmare</a><br/>
 			</div>
 		</div>
 
-		<script src="js/three.js"></script>
+		<script>
+			function chooseGameDifficulty(event){
+				localStorage["difficulty"] = event.target.innerHTML;
+			}
+
+		</script>
+
+		<script src="js/three.min.js"></script>
 		<script src="js/Detector.js"></script>
 		<script src="js/libs/stats.min.js"></script>
 		<script src="js/libs/dat.gui.min.js"></script>

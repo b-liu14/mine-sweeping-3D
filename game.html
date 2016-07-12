@@ -4,46 +4,9 @@
 		<title>3D bomb sweeper</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<style>
-			body {
-				color: #fff;
-				font-family:Monospace;
-				font-size:13px;
-				text-align:center;
-				background-color: #000;
-				margin: 0px;
-				overflow: hidden;
-			}
-			#info {
-				position: absolute;
-				top: 10px;
-				width: 100%;
-				text-align: center;
-				z-index: 100;
-				display:block;
-			}
-			.button {
-				color: #f00;
-				font-weight: bold;
-				text-decoration: underline;
-				cursor: pointer
-			}
-		</style>
+		<link rel="stylesheet" type="text/css" href="css/style.css">
 	</head>
 	<body>
-
-		<div id="info">
-			<div id="difficultyInfo">Difficulty:
-				<span class="button" id="easy">easy</span>
-				<span class="button" id="middle">middle</span>
-				<span class="button" id="difficult">difficult</span>
-				<span class="button" id="nightmare">nightmare</span>
-			</div>
-			There are <span id="numbersOfReservedBombs">20</span> bombs left.
-		</div>
-
-
-		<script src="js/three.js"></script>
 		<script src="js/three.min.js"></script>
 		<script src="js/controls/OrbitControls.js"></script>
 		<script src="js/Detector.js"></script>
@@ -60,4 +23,4 @@
 
 
 <!-- TODO -->
-<!-- 连环点开 界面 观察模式 -->
+<!-- 点击数字时显示有其待选球 -->

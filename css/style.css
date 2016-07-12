@@ -1,0 +1,32 @@
+body {
+	font-family: Monospace;
+	color: #fff;
+	margin: 0px;
+	overflow: hidden;
+	font-size: 3vw;
+	width: 100%;
+}
+#info {
+	position: absolute;
+	top: 40vh;
+	width: 100%;
+	text-align: center;
+	z-index: 100;
+	display:block;
+}
+#info a, .button {
+	color: #f00;
+	font-weight: bold;
+	text-decoration: none;
+	cursor: pointer
+}
+
+#gameName {
+	position: absolute;
+	top:3vh;
+	width: 100%;
+	margin:auto;
+	text-align: center;
+	font-size: 3vw;
+	color: #fff;
+}
