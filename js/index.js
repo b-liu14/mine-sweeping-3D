@@ -24,7 +24,7 @@ var GAMESTATE_BOMB = 3;
 if (!Detector.webgl)
 	Detector.addGetWebGLMessage();
 var container, stats;
-var camera, scene, renderer, controls, objects = [];
+var camera, scene, renderer, controls, objects = [], texts = [];
 var mouse, intersect, raycaster, isShiftDown = false;
 var loader = new THREE.FontLoader();
 
@@ -60,8 +60,8 @@ function init(font) {
 
 	// Background
 	var reflectionCube = new THREE.CubeTextureLoader()
-		.setPath('textures/cube/Park3Med/')
-		.load(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']);
+		.setPath('textures/cube/MilkyWay/')
+		.load(['dark-s_px.jpg', 'dark-s_nx.jpg', 'dark-s_py.jpg', 'dark-s_ny.jpg', 'dark-s_pz.jpg', 'dark-s_nz.jpg']);
 	reflectionCube.format = THREE.RGBFormat;
 	scene = new THREE.Scene();
 	scene.background = reflectionCube;
@@ -137,9 +137,17 @@ function init(font) {
 	dirLight.position.set(0, 0, 1).normalize();
 	scene.add(dirLight);
 
-	var pointLight = new THREE.PointLight(0xffffff, 1.5);
+	dirLight = new THREE.DirectionalLight(0xffffff, 0.125);
+	dirLight.position.set(0, 1, 0).normalize();
+	scene.add(dirLight);
+
+	dirLight = new THREE.DirectionalLight(0xffffff, 0.125);
+	dirLight.position.set(1, 0, 0).normalize();
+	scene.add(dirLight);
+
+	pointLight = new THREE.PointLight(0xF6E908, 1.5);
 	pointLight.color.setHex(color_safe);
-	pointLight.position.set(0, 100, 90);
+	pointLight.position.set(0, 1, 0);
 	scene.add(pointLight);
 }
 // To decide which object is bomb.
@@ -164,7 +172,7 @@ function gameInit(numberOfBomb) {
 
 function addBorder(){
 	var material = new THREE.LineBasicMaterial({
-		color: 0x00E6FF
+		color: 0x000000
 	});
 	var coodinate_value = function(index){
 		return sphereOffset + sphereInterval * (index - 1/2);
@@ -262,6 +270,7 @@ function createText(text, position) {
 	textMesh1.rotation.y = Math.PI * 2;
 
 	group.add(textMesh1);
+	texts.push(textMesh1);
 }
 
 function onDocumentMouseDown(event) {
@@ -335,11 +344,17 @@ function getBombNum (mesh) {
 }
 
 function render() {
+
 	var timer = Date.now() * 0.00025;
 	camera.lookAt(scene.position);
 	for (var i = 0, l = objects.length; i < l; i++) {
 		var object = objects[i];
 		object.rotation.y += 0.005;
+	}
+	for(var i = 0, l = texts.length; i < l; i ++){
+		texts[i].rotation.x = camera.rotation.x;
+		texts[i].rotation.y = camera.rotation.y;
+		texts[i].rotation.z = camera.rotation.z;
 	}
 	renderer.render(scene, camera);
 }
