@@ -10,7 +10,7 @@ var GAMESTATE_SAFE = 1;
 var GAMESTATE_DANGEROUS = 2;
 var GAMESTATE_BOMB = 3;
 
-
+// base
 if (!Detector.webgl)
 	Detector.addGetWebGLMessage();
 var container, stats;
@@ -26,6 +26,7 @@ var difficulty2NumberOfShperes = {
 	"NIGHTMARE": 6
 }
 
+// get the number of sphers per side
 var numberOfSphersPerSide = difficulty2NumberOfShperes[ localStorage[ "difficulty" ] ];
 if(typeof numberOfSphersPerSide !== "number"){
 	numberOfSphersPerSide = difficulty2NumberOfShperes["easy"];
@@ -56,7 +57,7 @@ var font = null;
 var MAX = coodinate_value(numberOfSphersPerSide - 1);
 var MIN = coodinate_value(0);
 
-//init 3D objects Array
+// init 3D objects Array
 var position_objects = new Array(numberOfSphersPerSide);
 for (var i = 0; i < position_objects.length; i++) {
 	position_objects[i] = new Array(numberOfSphersPerSide);
@@ -73,15 +74,15 @@ loader.load('fonts/gentilis_regular.typeface.json', function(_font) {
 	animate();
 });
 
+// timer
 var timer = 0;
-
-//display timer
 function startTime()
 {
 	document.getElementById('Time').innerHTML = timer + 's';
 	timer ++;
 	var t = setTimeout('startTime()',1000);
 }
+
 function init(font) {
 	//
 	container = document.createElement('div');
@@ -93,7 +94,6 @@ function init(font) {
 	// Background
 	var reflectionCube = new THREE.CubeTextureLoader()
 		.setPath('textures/cube/skybox/')
-		// .load(['dark-s_px.jpg', 'dark-s_nx.jpg', 'dark-s_py.jpg', 'dark-s_ny.jpg', 'dark-s_pz.jpg', 'dark-s_nz.jpg']);
 		.load(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']);
 	reflectionCube.format = THREE.RGBFormat;
 	scene = new THREE.Scene();
@@ -153,11 +153,11 @@ function init(font) {
 	controls = new THREE.OrbitControls(camera);
 	controls.target.set(0, 0, 0);
 	controls.update();
-	// EVENT LISTENER
+	// event listener
 	document.addEventListener('mousedown', onDocumentMouseDown, false);
 	window.addEventListener('resize', onWindowResize, false);
 
-	// LIGHT
+	// light
 	var dirLight = new THREE.DirectionalLight(0xffffff, 0.125);
 	dirLight.position.set(0, 0, 400).normalize();
 	scene.add(dirLight);
@@ -182,6 +182,7 @@ function init(font) {
 	pointLight.position.set(2 * MAX, MIN * 2, MIN * 2);
 	scene.add(pointLight);
 }
+
 // To decide which object is bomb.
 function gameInit(numberOfBomb) {
 	var bombReserve = numberOfBomb;
@@ -202,6 +203,7 @@ function gameInit(numberOfBomb) {
 	addBorder();
 }
 
+// game over
 function gameOver() {
 	for(var i = 0, l = objects.length; i < l; i ++){
 		if(objects[i].isBomb){
@@ -215,6 +217,7 @@ function gameOver() {
 	localStorage.removeItem("difficulty");
 }
 
+// victory
 function gameVictory() {
 	for(var i = 0, l = objects.length; i < l; i ++){
 		if(objects[i].isBomb){
@@ -228,15 +231,17 @@ function gameVictory() {
 	localStorage.removeItem("difficulty");
 }
 
+// coodinate value.
 function coodinate_value (index){
 	return sphereOffset + sphereInterval * (index);
 }
 
+// border
 function addBorder(){
 	var material = new THREE.LineBasicMaterial({
 		color: 0xFFFFFF
 	});
-	// add 0.5 to MAX to avoid the floor error
+	// Add 0.5 to MAX to avoid the floor error
 	for(var x = MIN; x <= MAX + 0.5; x += sphereInterval){
 		for(var y = MIN; y <= MAX + 0.5; y += sphereInterval){
 			var geometry_1 = new THREE.Geometry();
@@ -266,11 +271,13 @@ function addBorder(){
 	}
 }
 
+// resize event
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 	renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
 //
 function animate() {
 	requestAnimationFrame(animate);
@@ -278,13 +285,7 @@ function animate() {
 	stats.update();
 }
 
-function loadFont() {
-	var loader = new THREE.FontLoader();
-	loader.load(textFontUrl, function(response) {
-		font = response;
-	});
-}
-
+// create the 3D text
 function createText(text, position) {
 	var material = new THREE.MultiMaterial([
 		new THREE.MeshPhongMaterial({
@@ -319,7 +320,6 @@ function createText(text, position) {
 	var centerOffset_y = -0.5 * (textGeo.boundingBox.max.y - textGeo.boundingBox.min.y);
 	var centerOffset_z = -0.5 * (textGeo.boundingBox.max.z - textGeo.boundingBox.min.z);
 
-
 	var textMesh1 = new THREE.Mesh(textGeo, material);
 
 	textMesh1.position.x = centerOffset_x;
@@ -333,16 +333,20 @@ function createText(text, position) {
 	texts.push(textMesh1);
 }
 
+// mouse down event.
 function onDocumentMouseDown(event) {
 	event.preventDefault();
+
 	mouse.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
 	raycaster.setFromCamera(mouse, camera);
+
 	var intersects = raycaster.intersectObjects(objects);
 	if (intersects.length > 0) {
 		intersect = intersects[0].object;
 		if ( event.button === 0 ) {
+
+			// safe
 			if (intersect.state === GAMESTATE_DEFAULT && !intersect.isBomb) {
-				// safe
 				intersect.state = GAMESTATE_SAFE;
 				intersect.bombNum = getBombNum(intersect);
 				numberOfClickedSphere++;
@@ -357,20 +361,25 @@ function onDocumentMouseDown(event) {
 					gameVictory();
 				}
 			}
+
+			// bomb
 			else if (intersect.state === GAMESTATE_DEFAULT && intersect.isBomb) {
 				gameOver();
-
 			}
-		} else if (event.button === 2){
+		}
+
+		else if (event.button === 2){
+
+			// flag
 			if (intersect.state === GAMESTATE_DEFAULT) {
-				// lift flag
 				intersect.state = GAMESTATE_DANGEROUS;
 				intersect.material.color = new THREE.Color(color_dangerous);
 				reservedBombNum--;
 				reservedBombs.innerHTML = reservedBombNum;
 			}
+
+			// back to default state
 			else if (intersect.state === GAMESTATE_DANGEROUS){
-				// init state
 				intersect.state = GAMESTATE_DEFAULT;
 				intersect.material.color = new THREE.Color(color_default);
 				reservedBombNum++;
@@ -381,7 +390,7 @@ function onDocumentMouseDown(event) {
 }
 
 
-//to get all the zero objectt
+// To get all the zero objectt
 function  dominoEffect(mesh) {
 	var x_min = mesh.position_x - 1 >= 0 ? mesh.position_x - 1 : 0;
 	var y_min = mesh.position_y - 1 >= 0 ? mesh.position_y - 1 : 0;
@@ -389,6 +398,7 @@ function  dominoEffect(mesh) {
 	var x_max = mesh.position_x + 1 < numberOfSphersPerSide ? mesh.position_x + 1 : numberOfSphersPerSide - 1;
 	var y_max = mesh.position_y + 1 < numberOfSphersPerSide ? mesh.position_y + 1 : numberOfSphersPerSide - 1;
 	var z_max = mesh.position_z + 1 < numberOfSphersPerSide ? mesh.position_z + 1 : numberOfSphersPerSide - 1;
+
 	var object;
 	for(var i = x_min; i <= x_max; i++){
 		for (var j = y_min;j <= y_max;j++){
@@ -398,7 +408,7 @@ function  dominoEffect(mesh) {
 					// safe
 					object.state = GAMESTATE_SAFE;
 					object.bombNum = getBombNum(object);
-					clickedSafeBSphere++;
+					numberOfClickedSphere++;
 					scene.remove( object );
 					if (object.bombNum === 0) {
 						dominoEffect(object);
@@ -412,6 +422,7 @@ function  dominoEffect(mesh) {
 	}
 }
 
+// To get the number of bomb near the sphere.
 function getBombNum (mesh) {
 	var bombNum = 0;
 	var x_min = mesh.position_x - 1 >= 0 ? mesh.position_x - 1 : 0;
@@ -420,6 +431,7 @@ function getBombNum (mesh) {
 	var x_max = mesh.position_x + 1 < numberOfSphersPerSide ? mesh.position_x + 1 : numberOfSphersPerSide - 1;
 	var y_max = mesh.position_y + 1 < numberOfSphersPerSide ? mesh.position_y + 1 : numberOfSphersPerSide - 1;
 	var z_max = mesh.position_z + 1 < numberOfSphersPerSide ? mesh.position_z + 1 : numberOfSphersPerSide - 1;
+
 	for (var i = x_min; i <= x_max; i++) {
 		for (var j = y_min; j <= y_max; j++) {
 			for (var k = z_min; k <= z_max; k++) {
@@ -433,13 +445,14 @@ function getBombNum (mesh) {
 }
 
 function render() {
-
 	var timer = Date.now() * 0.00025;
 	camera.lookAt(scene.position);
+
 	for(var i = 0, l = texts.length; i < l; i ++){
 		texts[i].rotation.x = camera.rotation.x;
 		texts[i].rotation.y = camera.rotation.y;
 		texts[i].rotation.z = camera.rotation.z;
 	}
+
 	renderer.render(scene, camera);
 }
